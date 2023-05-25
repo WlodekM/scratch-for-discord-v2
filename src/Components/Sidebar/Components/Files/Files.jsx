@@ -7,9 +7,11 @@ import { AiFillFileAdd, AiOutlinePlus } from 'react-icons/ai'
 import { BsFillTrash3Fill, BsFillPencilFill } from "react-icons/bs"
 import { switchFiles } from "../../../../helpers/fileLoader.js"
 
+const nameRegex = /^(?!\.)(?!com[0-9]$)(?!con$)(?!lpt[0-9]$)(?!nul$)(?!prn$)[^\|\*\?\\:<>/$"]*[^\.\|\*\?\\:<>/$"]+$/;
+
 function Folder({ name, onClickNew }) {
   return <>
-    <div className="select-none font-bold pl-2 w-full border-2 border-transparent hover:border-white transition-all flex h-7 items-center justify-between">
+    <div className="select-none font-bold pl-2 w-full border-2  rounded-md border-transparent transition-all flex h-7 items-center justify-between cursor-pointer">
       <div className="flex direction-row items-center">
         <div className="h-[70%] mr-1">
           <AiFillFolder />
@@ -28,7 +30,7 @@ function Folder({ name, onClickNew }) {
 
 function CommandFile({ name, reload, reloader }) {
   return <>
-    <div className={`w-[95%] group ml-[5%] select-none pl-2 border-2 ${name === window.currentFile ? "border-white" : "border-transparent"} hover:border-white transition-all flex h-7 items-center`}>
+    <div className={`w-[95%] group ml-[5%] select-none pl-2  rounded-md border-2 ${name === window.currentFile ? "border-white" : "border-transparent cursor-pointer"} hover:border-white transition-all flex h-7 items-center`}>
       <div className="flex items-center w-[90%]" onClick={() => switchFiles(name, reload, reloader, false, true)}>
         <div className="h-[70%] mr-1">
           <SiJavascript className="w-full h-full text-yellow-500" />
@@ -64,7 +66,7 @@ function CommandFile({ name, reload, reloader }) {
 
 function JavaScriptMainFile({ name, reload, reloader }) {
   return <>
-    <div className={`select-none px-2 w-full hover:border-white border-2 ${name === window.currentFile ? "border-white" : "border-transparent"} transition-all flex h-7 items-center`} onClick={() => switchFiles("index", reload, reloader, false, true)}>
+    <div className={`select-none px-2 w-full  rounded-md hover:border-white border-2 ${name === window.currentFile ? "border-white" : "border-transparent cursor-pointer"} transition-all flex h-7 items-center`} onClick={() => switchFiles("index", reload, reloader, false, true)}>
       <div className="h-[70%] mr-1">
         <SiJavascript className="w-full h-full text-yellow-500" />
       </div>
@@ -91,15 +93,16 @@ export default function Files() {
 
   async function createNewFile() {
     const { value: formValues } = await Swal.fire({
-      title: 'Name your file',
+      title: 'Name your new file',
       html: '<input id="swal-input1" placeholder="command1" class="swal2-input">',
       focusConfirm: false,
       showDenyButton: true,
+      denyButtonText: `Cancel`,
       preConfirm: () => {
         const value = document.getElementById('swal-input1').value   
-        if (!value.match(/[A-Za-z0-9]{3}/)) Swal.showValidationMessage('File name must be 3 characters long and can only contain letters and numbers!')
-        if (window.files.commands[value]) Swal.showValidationMessage('This file already exists!')
-        if (!value) Swal.showValidationMessage('You need to write something!')
+        if (!value) return Swal.showValidationMessage('You need to write something!')
+        if (window.files.commands[value]) return Swal.showValidationMessage('This file already exists!')
+        if (!value.match(nameRegex)) return Swal.showValidationMessage('File name can´t start or end with a dot or include prohibited characters: |, *, ?, \, :, <, >, /, $, or "')
         return [
           value
         ]
@@ -145,16 +148,17 @@ export default function Files() {
  async function changeProjectName() {
       await Swal.fire({
       title: 'Name your project',
-      html: '<input id="swal-input1" class="swal2-input">',
+      html: '<input id="swal-input1" placeholder="My s4d Project" class="swal2-input">',
       focusConfirm: false,
+      showDenyButton: true,
+      denyButtonText: `Cancel`,
       preConfirm: () => {
+        Swal.showLoading()
       let projectName = document.getElementById('swal-input1').value
-      if (!projectName) return
+      if (!projectName) return Swal.showValidationMessage('You need to write something!')
+      if (!projectName.match(nameRegex)) return Swal.showValidationMessage('Project name can´t start or end with a dot or include prohibited characters: |, *, ?, \, :, <, >, /, $, or "')
       localStorage.setItem("projectName", projectName)
       window.dispatchEvent( new Event('storage') )
-      Swal.fire({
-        title: `Succesfully Set Project Name to ${projectName}!`,
-      })
       }
     })
   }
